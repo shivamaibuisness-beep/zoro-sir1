@@ -17,7 +17,6 @@
   t.src=v;s=b.getElementsByTagName(e)[0];
   s.parentNode.insertBefore(t,s)}(window, document,'script',
   'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('consent', 'revoke'); /* no optional tracking before consent */
   fbq('init', '1668092441345509');
 </script>
 <!-- End Meta Pixel Code -->
@@ -340,22 +339,6 @@ footer{border-top:1px solid rgba(245,248,255,.07);padding:44px 0 60px;position:r
 }
 .legal-close:hover{background:rgba(56,232,255,.16)}
 
-/* ---------- CONSENT BANNER ---------- */
-.consent{
-  position:fixed;left:16px;right:16px;bottom:16px;z-index:90;max-width:560px;margin:0 auto;
-  border-radius:18px;padding:22px;
-  background:linear-gradient(150deg,rgba(11,18,38,.96),rgba(8,13,29,.96));
-  border:1px solid rgba(56,232,255,.25);
-  box-shadow:0 20px 60px rgba(0,0,0,.55);
-  display:none;
-}
-.consent.show{display:block}
-.consent p{color:var(--muted);font-size:.86rem;margin-bottom:16px}
-.consent p b{color:var(--white)}
-.consent-row{display:flex;gap:12px;flex-wrap:wrap}
-.consent-row .cta{min-height:44px;padding:11px 22px;font-size:13px;border-radius:11px}
-.consent-row .cta.ghost{color:var(--white)}
-
 /* reveal on scroll */
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
 .reveal.visible{opacity:1;transform:none}
@@ -630,15 +613,6 @@ footer{border-top:1px solid rgba(245,248,255,.07);padding:44px 0 60px;position:r
   </div>
 </div>
 
-<!-- CONSENT BANNER -->
-<div class="consent" id="consent" role="dialog" aria-label="Cookie consent">
-  <p><b>Your privacy matters.</b> We use measurement cookies (Meta Pixel) to understand visits and Telegram button interactions. No personal details are collected through this page. You can accept or decline.</p>
-  <div class="consent-row">
-    <button class="cta" type="button" id="consent-accept">Accept</button>
-    <button class="cta ghost" type="button" id="consent-decline">Decline</button>
-  </div>
-</div>
-
 <script>
 (function(){
   "use strict";
@@ -651,30 +625,10 @@ footer{border-top:1px solid rgba(245,248,255,.07);padding:44px 0 60px;position:r
   window.addEventListener("zt:telegram-opened", function(){ tgOpened = true; });
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- CONSENT ---------- */
-  var CONSENT_KEY = "zt_consent_v1";
-  var consentBanner = document.getElementById("consent");
-  var consent = null;
-  try { consent = localStorage.getItem(CONSENT_KEY); } catch(e) {}
-
-  function grantConsent(){ if (typeof fbq === "function") fbq("consent","grant"); }
-  function setConsent(v){
-    try { localStorage.setItem(CONSENT_KEY, v); } catch(e) {}
-    consentBanner.classList.remove("show");
-    if (v === "accepted"){
-      grantConsent();
-      if (typeof fbq === "function" && !window.__ztPVDone){ window.__ztPVDone = true; fbq("track","PageView"); }
-    }
-  }
-  document.getElementById("consent-accept").addEventListener("click", function(){ setConsent("accepted"); });
-  document.getElementById("consent-decline").addEventListener("click", function(){ setConsent("declined"); });
-
-  if (consent === "accepted"){ grantConsent(); }
-  else { consentBanner.classList.add("show"); }
-
-  /* PageView only after consent (or re-fire guarded) */
-  if (typeof fbq === "function"){
-    if (consent === "accepted" && !window.__ztPVDone){ window.__ztPVDone = true; fbq("track","PageView"); }
+  /* ---------- PIXEL TRACKING ---------- */
+  if (typeof fbq === "function" && !window.__ztPVDone){
+    window.__ztPVDone = true;
+    fbq("track", "PageView");
   }
 
   /* ---------- VIEWCONTENT (once, on meaningful visibility) ---------- */
@@ -684,7 +638,7 @@ footer{border-top:1px solid rgba(245,248,255,.07);padding:44px 0 60px;position:r
       entries.forEach(function(en){
         if (en.isIntersecting && !vcDone){
           vcDone = true;
-          if (consent === "accepted" && typeof fbq === "function") fbq("track","ViewContent");
+          if (typeof fbq === "function") fbq("track","ViewContent");
           io.disconnect();
         }
       });
@@ -695,7 +649,7 @@ footer{border-top:1px solid rgba(245,248,255,.07);padding:44px 0 60px;position:r
 
   /* ---------- TELEGRAM CTA HANDLING ---------- */
   function trackCTA(){
-    if (consent === "accepted" && typeof fbq === "function"){
+    if (typeof fbq === "function"){
       fbq("trackCustom","TelegramCTAClick");
     }
   }
